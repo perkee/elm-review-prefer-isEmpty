@@ -47,19 +47,44 @@ all =
 emptyList = []"""
                     |> Review.Test.run rule
                     |> Review.Test.expectNoErrors
-        , test "should report an error when REPLACEME" <|
-            \() ->
-                testFile
-                    |> Review.Test.run rule
-                    |> Review.Test.expectErrors
-                        [ Review.Test.error
-                            { message = "You are checking if the length of a list is equal to zero"
-                            , details =
-                                [ "You can replace this with a call to `List.isEmpty`"
-                                , "List.length takes as long to run as the list is long"
-                                , "whereas List.isEmpty just checks if the first element exists in constant time."
-                                ]
-                            , under = "List.length emptyList == 0"
-                            }
-                        ]
+        , describe "should report an error when equal to zero"
+            [ test "with the 'List.length' application on the left" <|
+                \() ->
+                    """module A exposing (..)
+
+emptyIsZero : Bool
+emptyIsZero = List.length emptyList == 0
+                """
+                        |> Review.Test.run rule
+                        |> Review.Test.expectErrors
+                            [ Review.Test.error
+                                { message = "You are checking if the length of a list is equal to zero"
+                                , details =
+                                    [ "You can replace this with a call to `List.isEmpty`"
+                                    , "List.length takes as long to run as the list is long"
+                                    , "whereas List.isEmpty just checks if the first element exists in constant time."
+                                    ]
+                                , under = "List.length emptyList == 0"
+                                }
+                            ]
+            , test "with the 'List.length' application on the right" <|
+                \() ->
+                    """module A exposing (..)
+
+emptyIsZero : Bool
+emptyIsZero = 0 == List.length emptyList
+                """
+                        |> Review.Test.run rule
+                        |> Review.Test.expectErrors
+                            [ Review.Test.error
+                                { message = "You are checking if the length of a list is equal to zero"
+                                , details =
+                                    [ "You can replace this with a call to `List.isEmpty`"
+                                    , "List.length takes as long to run as the list is long"
+                                    , "whereas List.isEmpty just checks if the first element exists in constant time."
+                                    ]
+                                , under = "0 == List.length emptyList"
+                                }
+                            ]
+            ]
         ]
