@@ -77,7 +77,7 @@ expressionVisitor node context =
                     -- in
                     case maybeTheNonZeroNode nodeL nodeR of
                         Just nonZero ->
-                            if isAnApplicationOfListDotLength nonZero then
+                            if isAnApplicationOfListDotLength nonZero || isAPizzaOfListDotLength nonZero then
                                 ( [ Rule.error
                                         { message = "You are checking if the length of a list is equal to zero"
                                         , details =
@@ -128,6 +128,21 @@ isAnApplicationOfListDotLength node =
             False
 
 
+isAPizzaOfListDotLength : Node Expression -> Bool
+isAPizzaOfListDotLength node =
+    case Node.value node of
+        ParenthesizedExpression (Node _ (OperatorApplication "|>" _ _ (Node _ (FunctionOrValue modulePath fnName)))) ->
+            case ( modulePath, fnName ) of
+                ( [ "List" ], "length" ) ->
+                    True
+
+                _ ->
+                    False
+
+        _ ->
+            False
+
+
 maybeTheNonZeroNode : Node Expression -> Node Expression -> Maybe (Node Expression)
 maybeTheNonZeroNode nodeL nodeR =
     case ( Node.value nodeL, Node.value nodeR ) of
@@ -154,6 +169,7 @@ maybeTheNonZeroNode nodeL nodeR =
 --                 ]
 --             )
 --         )
+-- ([] |> List.length) == 0
 -- a =
 --     Just
 --         (Node { end = { column = 59, row = 22 }, start = { column = 33, row = 22 } }
