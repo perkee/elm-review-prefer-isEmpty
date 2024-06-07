@@ -5,27 +5,61 @@ import Review.Test
 import Test exposing (Test, describe, test)
 
 
+testFile : String
+testFile =
+    """module A exposing (..)
+
+
+emptyList = []
+
+
+notEmptyList = [1]
+
+
+emptyIsZero : Bool
+emptyIsZero = List.length emptyList == 0
+
+
+emptyIsEmpty : Bool
+emptyIsEmpty = List.isEmpty emptyList
+
+emptyIsZeroWithPizza : Bool
+emptyIsZeroWithPizza = emptyList |> List.length |> (==) 0
+
+
+emptyIsZeroWithSomePizza : Bool
+emptyIsZeroWithSomePizza = 0 == (emptyList |> List.length)
+
+
+badIsEmpty : List a -> Bool
+badIsEmpty = List.length >> (==) 0
+"""
+
+
 all : Test
 all =
     describe "PreferIsEmpty.List"
-        [ test "should not report an error when REPLACEME" <|
+        [ test "should not report an error when we don't even call List dot anything" <|
             \() ->
                 """module A exposing (..)
-a = 1
-"""
+
+
+emptyList = []"""
                     |> Review.Test.run rule
                     |> Review.Test.expectNoErrors
         , test "should report an error when REPLACEME" <|
             \() ->
-                """module A exposing (..)
-a = 1
-"""
+                testFile
                     |> Review.Test.run rule
                     |> Review.Test.expectErrors
                         [ Review.Test.error
-                            { message = "REPLACEME"
-                            , details = [ "REPLACEME" ]
-                            , under = "REPLACEME"
+                            { message = "You are checking if the length of a list is equal to zero"
+                            , details =
+                                [ "You can replace this with a call to `List.isEmpty`"
+                                , "List.length takes as long to run as the list is long"
+                                , "whereas List.isEmpty just checks if the first element exists in constant time."
+                                ]
+                            , under = "List.length emptyList == 0"
                             }
                         ]
         ]
