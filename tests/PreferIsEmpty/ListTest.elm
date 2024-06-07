@@ -124,5 +124,25 @@ emptyIsZero = 0 == ([] |> List.length)
                                 , under = "0 == ([] |> List.length)"
                                 }
                             ]
+            , only <|
+                test "with a mix of pizza and >>" <|
+                    \() ->
+                        """module A exposing (..)
+
+emptyIsZero : Bool
+emptyIsZero = List.length >> (==) 0 <| []
+                """
+                            |> Review.Test.run rule
+                            |> Review.Test.expectErrors
+                                [ Review.Test.error
+                                    { message = "You are checking if the length of a list is equal to zero"
+                                    , details =
+                                        [ "You can replace this with a call to `List.isEmpty`"
+                                        , "List.length takes as long to run as the list is long"
+                                        , "whereas List.isEmpty just checks if the first element exists in constant time."
+                                        ]
+                                    , under = "List.length >> (==) 0 <| []"
+                                    }
+                                ]
             ]
         ]

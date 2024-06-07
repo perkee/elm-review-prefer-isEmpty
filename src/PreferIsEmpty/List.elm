@@ -72,8 +72,8 @@ expressionVisitor node context =
                 "==" ->
                     -- let
                     --     _ =
-                    --         -- Debug.log "nodes" { nodeL = nodeL, nodeR = nodeR }
-                    --         -- Debug.log "the nonzero side" <| maybeTheNonZeroNode nodeL nodeR
+                    -- Debug.log "nodes" { nodeL = nodeL, nodeR = nodeR }
+                    -- Debug.log "the nonzero side" <| maybeTheNonZeroNode nodeL nodeR
                     -- in
                     case maybeTheNonZeroNode nodeL nodeR of
                         Just nonZero ->
@@ -106,11 +106,39 @@ expressionVisitor node context =
                 "/=" ->
                     ( [], context )
 
+                "<|" ->
+                    case nodeL of
+                        Node _ (OperatorApplication ">>" _ mightBeListDotLengthNode mightBeApplicationOfPrefixOperator) ->
+                            ( [], context )
+
+                        _ ->
+                            ( [], context )
+
                 _ ->
                     ( [], context )
 
         _ ->
             ( [], context )
+
+
+isAListDotLengthNode : Node Expression -> Bool
+isAListDotLengthNode node =
+    case Node.value node of
+        FunctionOrValue [ "List" ] "length" ->
+            True
+
+        _ ->
+            False
+
+
+isAnApplicationOfPrefixOperator : Node Expression -> Bool
+isAnApplicationOfPrefixOperator node =
+    case Node.value node of
+        Application [ Node _ (PrefixOperator "=="), Node _ (Integer 0) ] ->
+            True
+
+        _ ->
+            False
 
 
 isAnApplicationOfListDotLength : Node Expression -> Bool
@@ -183,3 +211,30 @@ maybeTheNonZeroNode nodeL nodeR =
 --                 )
 --             )
 --         )
+
+
+b =
+    OperatorApplication "<|"
+        Right
+        (Node { end = { column = 36, row = 4 }, start = { column = 15, row = 4 } }
+            (OperatorApplication ">>"
+                Right
+                (Node { end = { column = 26, row = 4 }, start = { column = 15, row = 4 } }
+                    (FunctionOrValue [ "List" ] "length")
+                )
+                (Node { end = { column = 36, row = 4 }, start = { column = 30, row = 4 } }
+                    (Application
+                        [ Node { end = { column = 34, row = 4 }, start = { column = 30, row = 4 } }
+                            (PrefixOperator "==")
+                        , Node { end = { column = 36, row = 4 }, start = { column = 35, row = 4 } }
+                            (Integer 0)
+                        ]
+                    )
+                )
+            )
+        )
+        (Node { end = { column = 42, row = 4 }, start = { column = 40, row = 4 } } (ListExpr []))
+
+
+a =
+    Node { end = { column = 36, row = 4 }, start = { column = 15, row = 4 } } (OperatorApplication ">>" Right (Node { end = { column = 26, row = 4 }, start = { column = 15, row = 4 } } (FunctionOrValue [ "List" ] "length")) (Node { end = { column = 36, row = 4 }, start = { column = 30, row = 4 } } (Application [ Node { end = { column = 34, row = 4 }, start = { column = 30, row = 4 } } (PrefixOperator "=="), Node { end = { column = 36, row = 4 }, start = { column = 35, row = 4 } } (Integer 0) ])))
